@@ -120,3 +120,27 @@ spec:
 status:
   loadBalancer: {}
   ```
+
+## Build debian packages
+
+Prereq:
+
+Linux ubuntu xenial, go 1.8, bazel, ... (the packages listed at https://github.com/istio/istio/blob/master/devel/README.md#collection-of-scripts-and-notes-for-developing-for-istio )
+
+For gcloud (  https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu ):
+```shell
+export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)"
+echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo apt-get update && sudo apt-get install google-cloud-sdk
+gcloud init
+sudo apt-get install kubectl
+gcloud container clusters get-credentials demo-1 --zone us-west1-b --project istio-demo-0-2
+```
+
+Then:
+
+```
+git clone https://github.com/istio/proxy.git -b rawvm-demo-0-2-2
+tools/deb/test/build_all.sh
+```
