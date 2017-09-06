@@ -48,6 +48,11 @@ tail -f /tmp/mysqlquery.log
 ### Or
 sudo apt-get mariadb-server
 
+TODO: figure out equivalent of above for mariadb
+
+https://stackoverflow.com/questions/28068155/access-denied-for-user-rootlocalhost-using-password-yes-after-new-instal
+
+
 ## Sidecar
 See
 https://github.com/istio/proxy/tree/master/tools/deb
@@ -125,7 +130,9 @@ status:
 
 Prereq:
 
-Linux ubuntu xenial, go 1.8, bazel, ... (the packages listed at https://github.com/istio/istio/blob/master/devel/README.md#collection-of-scripts-and-notes-for-developing-for-istio )
+Linux ubuntu xenial, docker, go 1.8, bazel, ... (the packages listed at https://github.com/istio/istio/blob/master/devel/README.md#collection-of-scripts-and-notes-for-developing-for-istio )
+
+ps: for docker - remember to "docker ps" and it should work/not error out and not require sudo, if it doesn't work add your username to /etc/group docker
 
 For gcloud (  https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu ):
 ```shell
