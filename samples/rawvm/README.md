@@ -145,6 +145,11 @@ sudo apt-get install kubectl
 gcloud container clusters get-credentials demo-1 --zone us-west1-b --project istio-demo-0-2
 ```
 
+Note to install rbac yaml you need:
+```
+kubectl create clusterrolebinding my-admin-access --clusterrole cluster-admin --user USERNAME
+```
+
 Then:
 
 ```
