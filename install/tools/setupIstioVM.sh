@@ -77,6 +77,7 @@ function istioInstall() {
 }
 
 function istioRestart() {
+    echo "restart istio" 
     # Node agent
     systemctl status istio-auth-node-agent > /dev/null
     if [[ $? = 0 ]]; then
