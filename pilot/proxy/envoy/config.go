@@ -882,8 +882,7 @@ func buildEgressHTTPRoutes(mesh *proxyconfig.MeshConfig, node proxy.Node,
 	for _, rule := range egressRules {
 		for _, port := range rule.Ports {
 			protocol := model.ConvertCaseInsensitiveStringToProtocol(port.Protocol)
-			if protocol != model.ProtocolHTTP && protocol != model.ProtocolHTTPS &&
-				protocol != model.ProtocolHTTP2 && protocol != model.ProtocolGRPC {
+			if !model.IsEgressRulesSupportedHTTPProtocol(protocol) {
 				continue
 			}
 			intPort := int(port.Port)
