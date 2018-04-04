@@ -1053,19 +1053,19 @@ func setTestConfig() error {
 	tc.rulesDir = tmpDir
 	demoApps := []framework.App{
 		{
-			AppYaml:    util.GetResourcePath(bookinfoYaml),
+			AppYamls:   []string{util.GetResourcePath(bookinfoYaml)},
 			KubeInject: true,
 		},
 		{
-			AppYaml:    util.GetResourcePath(bookinfoRatingsv2Yaml),
+			AppYamls:   []string{util.GetResourcePath(bookinfoRatingsv2Yaml)},
 			KubeInject: true,
 		},
 		{
-			AppYaml:    util.GetResourcePath(bookinfoDbYaml),
+			AppYamls:   []string{util.GetResourcePath(bookinfoDbYaml)},
 			KubeInject: true,
 		},
 		{
-			AppYaml:    util.GetResourcePath(sleepYaml),
+			AppYamls:   []string{util.GetResourcePath(sleepYaml)},
 			KubeInject: true,
 		},
 	}

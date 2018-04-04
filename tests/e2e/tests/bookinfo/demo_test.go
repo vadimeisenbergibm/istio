@@ -482,22 +482,22 @@ func setTestConfig() error {
 	if err != nil {
 		return err
 	}
-	demoApps := []framework.App{{AppYaml: getBookinfoResourcePath(bookinfoYaml),
+	demoApps := []framework.App{{AppYamls: []string{getBookinfoResourcePath(bookinfoYaml)},
 		KubeInject: true,
 	},
-		{AppYaml: getBookinfoResourcePath(bookinfoRatingsv2Yaml),
+		{AppYamls: []string{getBookinfoResourcePath(bookinfoRatingsv2Yaml)},
 			KubeInject: true,
 		},
-		{AppYaml: getBookinfoResourcePath(bookinfoRatingsMysqlYaml),
+		{AppYamls: []string{getBookinfoResourcePath(bookinfoRatingsMysqlYaml)},
 			KubeInject: true,
 		},
-		{AppYaml: getBookinfoResourcePath(bookinfoDbYaml),
+		{AppYamls: []string{getBookinfoResourcePath(bookinfoDbYaml)},
 			KubeInject: true,
 		},
-		{AppYaml: getBookinfoResourcePath(bookinfoMysqlYaml),
+		{AppYamls: []string{getBookinfoResourcePath(bookinfoMysqlYaml)},
 			KubeInject: true,
 		},
-		{AppYaml: getBookinfoResourcePath(bookinfoDetailsExternalServiceYaml),
+		{AppYamls: []string{getBookinfoResourcePath(bookinfoDetailsExternalServiceYaml)},
 			KubeInject: true,
 		},
 	}

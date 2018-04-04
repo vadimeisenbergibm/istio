@@ -306,7 +306,7 @@ func setTestConfig() error {
 	}
 	demoApps := []framework.App{
 		{
-			AppYaml:    util.GetResourcePath(bookinfoYaml),
+			AppYamls:   []string{util.GetResourcePath(bookinfoYaml)},
 			KubeInject: true,
 		},
 	}

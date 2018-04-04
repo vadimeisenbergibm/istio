@@ -32,10 +32,10 @@ const (
 // App gathers information for Hop app
 type App struct {
 	AppYamlTemplate string
-	AppYaml         string
+	AppYamls        []string
 	KubeInject      bool
 	Template        interface{}
-	deployedYaml    string
+	deployedYamls   []string
 }
 
 // AppManager organize and deploy apps
@@ -62,15 +62,18 @@ func (am *AppManager) generateAppYaml(a *App) error {
 		return nil
 	}
 	var err error
-	a.AppYaml, err = util.CreateTempfile(am.tmpDir, filepath.Base(a.AppYamlTemplate), yamlSuffix)
+	var appYaml string
+
+	appYaml, err = util.CreateTempfile(am.tmpDir, filepath.Base(a.AppYamlTemplate), yamlSuffix)
 	if err != nil {
 		log.Errorf("Failed to generate yaml %s: %v", a.AppYamlTemplate, err)
 		return err
 	}
-	if err := util.Fill(a.AppYaml, a.AppYamlTemplate, a.Template); err != nil {
+	if err := util.Fill(appYaml, a.AppYamlTemplate, a.Template); err != nil {
 		log.Errorf("Failed to generate yaml for template %s", a.AppYamlTemplate)
 		return err
 	}
+	a.AppYamls = []string{appYaml}
 	return nil
 }
 
@@ -78,24 +81,29 @@ func (am *AppManager) deploy(a *App) error {
 	if err := am.generateAppYaml(a); err != nil {
 		return err
 	}
-	finalYaml := a.AppYaml
-	if a.KubeInject && !*useAutomaticInjection {
-		var err error
-		finalYaml, err = util.CreateTempfile(am.tmpDir, kubeInjectPrefix, yamlSuffix)
-		if err != nil {
-			log.Errorf("CreateTempfile failed %v", err)
+
+	for _, appYaml := range a.AppYamls {
+
+		finalYaml := appYaml
+		if a.KubeInject && !*useAutomaticInjection {
+			var err error
+			finalYaml, err = util.CreateTempfile(am.tmpDir, kubeInjectPrefix, yamlSuffix)
+			if err != nil {
+				log.Errorf("CreateTempfile failed %v", err)
+				return err
+			}
+			if err = am.istioctl.KubeInject(appYaml, finalYaml); err != nil {
+				log.Errorf("KubeInject failed for yaml %s: %v", appYaml, err)
+				return err
+			}
+		}
+		if err := util.KubeApply(am.namespace, finalYaml); err != nil {
+			log.Errorf("Kubectl apply %s failed", finalYaml)
 			return err
 		}
-		if err = am.istioctl.KubeInject(a.AppYaml, finalYaml); err != nil {
-			log.Errorf("KubeInject failed for yaml %s: %v", a.AppYaml, err)
-			return err
-		}
+
+		a.deployedYamls = append(a.deployedYamls, finalYaml)
 	}
-	if err := util.KubeApply(am.namespace, finalYaml); err != nil {
-		log.Errorf("Kubectl apply %s failed", finalYaml)
-		return err
-	}
-	a.deployedYaml = finalYaml
 	return nil
 }
 
@@ -139,14 +147,11 @@ func (am *AppManager) UndeployApp(a *App) error {
 		return errors.New("function UndeployApp must be called after Setup")
 	}
 
-	if a.deployedYaml == "" {
-		// It wasn't deployed.
-		return nil
-	}
-
-	if err := util.KubeDelete(am.namespace, a.deployedYaml); err != nil {
-		log.Errorf("Kubectl delete %s failed", a.deployedYaml)
-		return err
+	for _, deployedYaml := range a.deployedYamls {
+		if err := util.KubeDelete(am.namespace, deployedYaml); err != nil {
+			log.Errorf("Kubectl delete %s failed", deployedYaml)
+			return err
+		}
 	}
 	return nil
 }
