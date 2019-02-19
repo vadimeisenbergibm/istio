@@ -372,4 +372,4 @@ global:
   #     - registryServiceName: istio-ingressgateway
   #       port: 443
   #
-  meshNetworks:
+  meshNetworks: {}
