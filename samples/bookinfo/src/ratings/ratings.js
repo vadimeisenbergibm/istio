@@ -138,22 +138,20 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
       })
     }
   } else {
-      if (process.env.SERVICE_VERSION === 'v_buggy') {
+      if (process.env.SERVICE_VERSION === 'v-faulty') {
         // in third of cases return error, in another third perform delay,
         // in another third proceed as usual
         var random = Math.random(); // returns [0,1]
         if (random <= 0.333333) {
-          res.writeHead(500, {'Content-type': 'application/json'})
-          res.end(JSON.stringify({error: 'a nasty bug occurred'}))
+          getLocalReviewsServiceUnavailable(res)
         } else if (random <= 0.666666) {
             setTimeout(getLocalReviewsSuccessful, 7000, res, productId)
         } else {
             getLocalReviewsSuccessful(res, productId)
         }
       }
-      else if (process.env.SERVICE_VERSION === 'v_faulty') {
-        res.writeHead(500, {'Content-type': 'application/json'})
-        res.end(JSON.stringify({error: 'a nasty fault occurred'}))
+      else if (process.env.SERVICE_VERSION === 'v-unavailable') {
+        getLocalReviewsServiceUnavailable(res)
       }
       else {
         getLocalReviewsSuccessful(res, productId)
@@ -177,6 +175,11 @@ function putLocalReviews (productId, ratings) {
 function getLocalReviewsSuccessful(res, productId) {
   res.writeHead(200, {'Content-type': 'application/json'})
   res.end(JSON.stringify(getLocalReviews(productId)))
+}
+
+function getLocalReviewsServiceUnavailable(res) {
+  res.writeHead(503, {'Content-type': 'application/json'})
+  res.end(JSON.stringify({error: 'Service unavailable'}))
 }
 
 function getLocalReviews (productId) {
