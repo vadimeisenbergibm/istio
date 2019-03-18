@@ -19,6 +19,15 @@ var port = parseInt(process.argv[2])
 
 var userAddedRatings = [] // used to demonstrate POST functionality
 
+var unavailable = false
+
+if (process.env.SERVICE_VERSION === 'v-unavailable') {
+    // make the service unavailable once in 60 seconds
+    setInterval(function () {
+        unavailable = !unavailable
+    }, 60000);
+}
+
 /**
  * We default to using mongodb, if DB_TYPE is not set to mysql.
  */
@@ -139,19 +148,31 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
     }
   } else {
       if (process.env.SERVICE_VERSION === 'v-faulty') {
-        // in third of cases return error, in another third perform delay,
-        // in another third proceed as usual
+        // in half of the cases return error,
+        // in another half proceed as usual
         var random = Math.random(); // returns [0,1]
-        if (random <= 0.333333) {
+        if (random <= 0.5) {
           getLocalReviewsServiceUnavailable(res)
-        } else if (random <= 0.666666) {
-            setTimeout(getLocalReviewsSuccessful, 7000, res, productId)
         } else {
-            getLocalReviewsSuccessful(res, productId)
+          getLocalReviewsSuccessful(res, productId)
+        }
+      }
+      else if (process.env.SERVICE_VERSION === 'v-delayed') {
+        // in half of the cases delay for 7 seconds,
+        // in another half proceed as usual
+        var random = Math.random(); // returns [0,1]
+        if (random <= 0.5) {
+          setTimeout(getLocalReviewsSuccessful, 7000, res, productId)
+        } else {
+          getLocalReviewsSuccessful(res, productId)
         }
       }
       else if (process.env.SERVICE_VERSION === 'v-unavailable') {
-        getLocalReviewsServiceUnavailable(res)
+          if (unavailable) {
+              getLocalReviewsServiceUnavailable(res)
+          } else {
+              getLocalReviewsSuccessful(res, productId)
+          }
       }
       else {
         getLocalReviewsSuccessful(res, productId)
