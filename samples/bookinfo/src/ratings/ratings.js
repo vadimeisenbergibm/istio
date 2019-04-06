@@ -20,12 +20,26 @@ var port = parseInt(process.argv[2])
 var userAddedRatings = [] // used to demonstrate POST functionality
 
 var unavailable = false
+var healthy = true
 
 if (process.env.SERVICE_VERSION === 'v-unavailable') {
     // make the service unavailable once in 60 seconds
     setInterval(function () {
         unavailable = !unavailable
     }, 60000);
+}
+
+if (process.env.SERVICE_VERSION === 'v-unhealthy') {
+    // make the service unavailable once in 15 minutes for 15 minutes.
+    // 15 minutes is chosen since the Kubernetes's exponential back-off is reset after 10 minutes
+    // of successful execution
+    // see https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
+    // Kiali shows the last 10 or 30 minutes, so to show the error rate of 50%,
+    // it will be required to run the service for 30 minutes, 15 minutes of each state (healthy/unhealthy)
+    setInterval(function () {
+        healthy = !healthy
+        unavailable = !unavailable
+    }, 900000);
 }
 
 /**
@@ -167,7 +181,7 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
           getLocalReviewsSuccessful(res, productId)
         }
       }
-      else if (process.env.SERVICE_VERSION === 'v-unavailable') {
+      else if (process.env.SERVICE_VERSION === 'v-unavailable' || process.env.SERVICE_VERSION === 'v-unhealthy') {
           if (unavailable) {
               getLocalReviewsServiceUnavailable(res)
           } else {
@@ -181,8 +195,13 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
 })
 
 dispatcher.onGet('/health', function (req, res) {
-  res.writeHead(200, {'Content-type': 'application/json'})
-  res.end(JSON.stringify({status: 'Ratings is healthy'}))
+    if (healthy) {
+        res.writeHead(200, {'Content-type': 'application/json'})
+        res.end(JSON.stringify({status: 'Ratings is healthy'}))
+    } else {
+        res.writeHead(500, {'Content-type': 'application/json'})
+        res.end(JSON.stringify({status: 'Ratings is not healthy'}))
+    }
 })
 
 function putLocalReviews (productId, ratings) {
