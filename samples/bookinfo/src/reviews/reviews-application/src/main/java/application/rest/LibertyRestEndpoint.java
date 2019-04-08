@@ -42,6 +42,7 @@ public class LibertyRestEndpoint extends Application {
     private final static String star_color = System.getenv("STAR_COLOR") == null ? "black" : System.getenv("STAR_COLOR");
     private final static String services_domain = System.getenv("SERVICES_DOMAIN") == null ? "" : ("." + System.getenv("SERVICES_DOMAIN"));
     private final static String ratings_service = "http://ratings" + services_domain + ":9080/ratings";
+    private final static Boolean flood_ratings = Boolean.valueOf(System.getenv("FLOOD_RATINGS"));
 
     private String getJsonResponse (String productId, int starsReviewer1, int starsReviewer2) {
     	String result = "{";
@@ -61,7 +62,7 @@ public class LibertyRestEndpoint extends Application {
         }
       }
     	result += "},";
-    	
+
     	// reviewer 2:
     	result += "{";
     	result += "  \"reviewer\": \"Reviewer2\",";
@@ -75,13 +76,13 @@ public class LibertyRestEndpoint extends Application {
         }
       }
     	result += "}";
-    	
+
     	result += "]";
     	result += "}";
 
     	return result;
     }
-    
+
     private JsonObject getRatings(String productId, String user, String useragent, String xreq, String xtraceid, String xspanid,
                                   String xparentspanid, String xsampled, String xflags, String xotspan){
       ClientBuilder cb = ClientBuilder.newBuilder();
@@ -119,6 +120,15 @@ public class LibertyRestEndpoint extends Application {
         builder.header("user-agent", useragent);
       }
       Response r = builder.get();
+
+      if (flood_ratings) {
+          // flood ratings with unnecessary requests to demonstrate Istio rate limiting
+          // the response is disregarded
+          for (int i = 0; i < 100; i++) {
+              builder.async().get();
+          }
+      }
+
       int statusCode = r.getStatusInfo().getStatusCode();
       if (statusCode == Response.Status.OK.getStatusCode() ) {
         StringReader stringReader = new StringReader(r.readEntity(String.class));
@@ -166,7 +176,7 @@ public class LibertyRestEndpoint extends Application {
             }
           }
         }
-      } 
+      }
 
       String jsonResStr = getJsonResponse(Integer.toString(productId), starsReviewer1, starsReviewer2);
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(jsonResStr).build();
