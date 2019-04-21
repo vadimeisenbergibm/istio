@@ -51,7 +51,7 @@ pushd "$SCRIPTDIR/reviews"
 	   --build-arg enable_ratings=true --build-arg star_color=red .
     #with ratings red stars and flooding
     docker build -t "istio/examples-bookinfo-reviews-v-flooding:${VERSION}" -t istio/examples-bookinfo-reviews-v-flooding:latest --build-arg service_version=v-flooding \
-	   --build-arg enable_ratings=true --build-arg star_color=red --build-arg flood_ratings=true .
+	   --build-arg enable_ratings=true --build-arg star_color=red --build-arg flood_factor=1000 .
    popd
 popd
 
