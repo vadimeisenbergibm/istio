@@ -42,7 +42,7 @@ public class LibertyRestEndpoint extends Application {
     private final static String star_color = System.getenv("STAR_COLOR") == null ? "black" : System.getenv("STAR_COLOR");
     private final static String services_domain = System.getenv("SERVICES_DOMAIN") == null ? "" : ("." + System.getenv("SERVICES_DOMAIN"));
     private final static String ratings_service = "http://ratings" + services_domain + ":9080/ratings";
-    private final static Integer flood_factor = System.getenv("FLOOD_FACTOR") == null ? 0 : Integer.valueOf(System.getenv("FLOOD_FACTOR"));
+    private final static Boolean flood_ratings = Boolean.valueOf(System.getenv("FLOOD_RATINGS"));
 
     private String getJsonResponse (String productId, int starsReviewer1, int starsReviewer2) {
     	String result = "{";
@@ -121,10 +121,12 @@ public class LibertyRestEndpoint extends Application {
       }
       Response r = builder.get();
 
-      // flood ratings with unnecessary requests to demonstrate Istio rate limiting
-      // the response is disregarded
-      for (int i = 0; i < flood_factor; i++) {
-          builder.async().get();
+      if (flood_ratings) {
+          // flood ratings with unnecessary requests to demonstrate Istio rate limiting
+          // the response is disregarded
+          for (int i = 0; i < 100; i++) {
+              builder.async().get();
+          }
       }
 
       int statusCode = r.getStatusInfo().getStatusCode();
