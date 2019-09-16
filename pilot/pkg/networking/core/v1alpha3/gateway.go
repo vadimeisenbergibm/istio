@@ -598,6 +598,9 @@ func (configgen *ConfigGeneratorImpl) createGatewayTCPFilterChainOpts(
 		// TCP with TLS termination and forwarding. Setup TLS context to terminate, find matching services with TCP blocks
 		// and forward to backend
 		// Validation ensures that non-passthrough servers will have certs
+
+		filterChains := make([]*filterChainOpts, 0)
+
 		if filters := buildGatewayNetworkFiltersFromTCPRoutes(node, env,
 			push, server, gatewaysForWorkload); len(filters) > 0 {
 			enableIngressSdsAgent := false
@@ -606,14 +609,15 @@ func (configgen *ConfigGeneratorImpl) createGatewayTCPFilterChainOpts(
 			if enableSds, found := node.Metadata["USER_SDS"]; found {
 				enableIngressSdsAgent, _ = strconv.ParseBool(enableSds)
 			}
-			return []*filterChainOpts{
-				{
-					sniHosts:       getSNIHostsForServer(server),
-					tlsContext:     buildGatewayListenerTLSContext(server, enableIngressSdsAgent, env.Mesh.SdsUdsPath, node.Metadata),
-					networkFilters: filters,
-				},
-			}
+			filterChains = append(filterChains, &filterChainOpts{
+				sniHosts:       getSNIHostsForServer(server),
+				tlsContext:     buildGatewayListenerTLSContext(server, enableIngressSdsAgent, env.Mesh.SdsUdsPath, node.Metadata),
+				networkFilters: filters,
+			})
 		}
+
+		// append SNI matches
+		return append(filterChains, buildGatewayNetworkFiltersFromTLSRoutes(node, env, push, server, gatewaysForWorkload)...)
 	} else {
 		// Passthrough server.
 		return buildGatewayNetworkFiltersFromTLSRoutes(node, env, push, server, gatewaysForWorkload)
